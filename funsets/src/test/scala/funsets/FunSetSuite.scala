@@ -111,4 +111,46 @@ class FunSetSuite extends FunSuite {
   }
 
 
+  test("test intersect and diff") {
+
+    new TestSets {
+
+      val mySet1 = union(s1, union(s2, s3))
+      val mySet2 = singletonSet(4)
+      val mySet3 = union(mySet1, mySet2)
+
+      assert(contains(mySet1, 1), "Intersect 1")
+      assert(contains(mySet1, 2), "Intersect 2")
+      assert(contains(mySet1, 3), "Intersect 3")
+      assert(!contains(mySet1, 4), "Intersect 4")
+
+      assert(contains(diff(mySet2, mySet1), 4), "diff 1")
+      assert(contains(diff(mySet3, mySet1), 4), "diff 2")
+      assert(contains(diff(mySet3, mySet1), 4), "diff 2")
+
+    }
+
+  }
+
+
+  test("test filter") {
+
+    new TestSets {
+
+      val mySet1 = union(s1, union(s2, s3))
+      val mySet2 = singletonSet(4)
+      val mySet3 = union(mySet1, mySet2)
+
+      // mySet3 = {1,2,3,4}
+      // s1 = 1
+      assert(contains(filter(mySet3, s1), 1), "filter 1")
+      assert(!contains(filter(mySet3, s1), 2), "filter 2")
+      assert(!contains(filter(mySet3, s1), 3), "filter 3")
+      assert(!contains(filter(mySet3, s1), 4), "filter 4")
+
+    }
+
+  }
+
+
 }
