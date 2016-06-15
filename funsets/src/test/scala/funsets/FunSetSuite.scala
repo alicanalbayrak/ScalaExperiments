@@ -153,4 +153,56 @@ class FunSetSuite extends FunSuite {
   }
 
 
+  test("test forall method") {
+
+    new TestSets {
+
+      var set1 = singletonSet(0)
+      for (i <- 1 to 20)
+        set1 = union(set1, singletonSet(i))
+
+      var predicate1 = singletonSet(0)
+      for (i <- 1 to 19)
+        predicate1 = union(predicate1, singletonSet(i))
+
+      var predicate2 = singletonSet(0)
+      for (i <- 1 to 100)
+        predicate2 = union(predicate2, singletonSet(i))
+
+      assert(!forall(set1, predicate1), "forall 1")
+      assert(forall(set1, predicate2), "forall 2")
+
+    }
+
+  }
+
+
+  test("test exists method") {
+
+    new TestSets {
+
+      var set1 = singletonSet(0)
+      for (i <- 1 to 2)
+        set1 = union(set1, singletonSet(i))
+
+      assert(!exists(set1, x => if(x==3) true else false), "exist 1")
+      set1 = union(set1,singletonSet(3))
+      assert(exists(set1, x => if(x==3) true else false), "exist 2")
+    }
+
+  }
+
+  test("test map method") {
+
+    var set1 = singletonSet(0)
+    for (i <- -1000 to -1)
+      set1 = union(set1, singletonSet(i))
+
+
+    assert(contains(map(set1,x => x*2),-2000), "map 1")
+    assert(contains(map(set1,x => x*2),0), "map 2")
+    assert(!contains(map(set1,x => x*2),-1), "map 3")
+
+  }
+
 }
