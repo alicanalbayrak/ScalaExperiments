@@ -2,6 +2,8 @@ package patmat
 
 import common._
 
+import scala.collection.immutable.Stream.Empty
+
 /**
   * Assignment 4: Huffman coding
   *
@@ -36,7 +38,7 @@ object Huffman {
 
   def chars(tree: CodeTree): List[Char] = tree match {
 
-    case Fork(left,right, chars, weight) => chars
+    case Fork(left, right, chars, weight) => chars
 
     case Leaf(char, weight) => List(char)
 
@@ -77,12 +79,44 @@ object Huffman {
     * Another way to deconstruct a pair is using pattern matching:
     *
     * pair match {
-    * case (theChar, theInt) =>
+    * cxase (theChar, theInt) =>
     * println("character is: "+ theChar)
     * println("integer is  : "+ theInt)
     * }
     */
-  def times(chars: List[Char]): List[(Char, Int)] = ???
+  def times(chars: List[Char]): List[(Char, Int)] = {
+
+    /**
+      * Reduced char list guarantees that for every single charachter in a list, contains only one element
+      */
+    def reducedCharList(chars: List[Char], accList: List[Char]): List[Char] = {
+      if (chars.isEmpty) accList
+      else if (accList.contains(chars.head)) reducedCharList(chars.tail, accList)
+      else reducedCharList(chars.tail, chars.head :: accList)
+    }
+
+    val reducedList = reducedCharList(chars, List())
+
+    queryReducedList(reducedList, chars, List())
+
+  }
+
+  def queryReducedList(reducedList: List[Char], realList: List[Char], acc: List[(Char, Int)]): List[(Char, Int)] = {
+
+    if (reducedList.isEmpty) Nil
+    else (reducedList.head, countCharOccurence(reducedList.head, realList)) :: queryReducedList(reducedList.tail, realList, acc)
+
+  }
+
+
+  def countCharOccurence(neededChar: Char, cList: List[Char]): Int = {
+
+    if (cList.isEmpty) 0
+    else if (cList.head equals neededChar) countCharOccurence(neededChar, cList.tail) + 1
+    else countCharOccurence(neededChar, cList.tail)
+
+  }
+
 
   /**
     * Returns a list of `Leaf` nodes for a given frequency table `freqs`.
@@ -91,7 +125,21 @@ object Huffman {
     * head of the list should have the smallest weight), where the weight
     * of a leaf is the frequency of the character.
     */
-  def makeOrderedLeafList(freqs: List[(Char, Int)]): List[Leaf] = ???
+  def makeOrderedLeafList(freqs: List[(Char, Int)]): List[Leaf] = {
+
+    def makeOrderedLeafListAcc(freqs: List[(Char, Int)], acc: List[Leaf]): List[Leaf] = {
+      if (freqs.isEmpty) acc
+      else insert(Leaf(freqs.head._1, freqs.head._2), makeOrderedLeafListAcc(freqs.tail, acc))
+    }
+
+
+    makeOrderedLeafListAcc(freqs, List())
+  }
+
+  def insert(leaf: Leaf, xs: List[Leaf]): List[Leaf] = xs match {
+    case List() => List(leaf)
+    case y :: ys => if (leaf.weight <= y.weight) leaf :: xs else y :: insert(leaf, ys)
+  }
 
   /**
     * Checks whether the list `trees` contains only one single code tree.
