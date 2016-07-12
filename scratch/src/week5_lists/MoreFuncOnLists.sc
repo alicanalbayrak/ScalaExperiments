@@ -22,6 +22,17 @@ def flatten(xs: List[Any]): List[Any] = {
   }
 }
 
+def removeAt[T](xs: List[T], n: Int): List[T] = {
+
+  val splitted = xs.splitAt(n)
+  val head = splitted._1
+  val tail = splitted._2.drop(1)
+
+  head ::: tail
+
+  // (xs take n) ::: (xs drop n+1)
+}
+
 val firstList = 4 :: 7 :: 5 :: Nil
 
 val secondList = 1 :: 2 :: 3 :: Nil
