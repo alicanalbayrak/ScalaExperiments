@@ -40,7 +40,32 @@ object ListFun {
   }
 
   pack(List("a", "a", "a", "b", "c", "c", "a"))
+
   // res6: List[List[String]] = List(List(a, a, a), List(b), List(c, c), List(a))
+
+  def encode[T](xs: List[T]): List[(T, Int)] = {
+    def subEncode(xs: List[List[T]]): List[(T, Int)] = {
+      xs match {
+        case Nil => Nil
+        case y :: ys =>
+          y match {
+            case Nil => Nil
+            case m :: ms => (m, ms.length + 1) :: subEncode(ys)
+          }
+      }
+    }
+    subEncode(pack(xs))
+  }
+
+  encode(List("a", "a", "a", "b", "c", "c", "a"))
+
+  //  res7: List[Any] = List(List(a, 3), List(b, 1), List(c, 2), List(a, 1))
+
+  def encodeOrig[T](xs: List[T]): List[(T, Int)] =
+    pack(xs) map (ys => (ys.head, ys.length))
+
+  encodeOrig(List("a", "a", "a", "b", "c", "c", "a"))
+  //  res8: List[(String, Int)] = List((a,3), (b,1), (c,2), (a,1))
 
 
 }
