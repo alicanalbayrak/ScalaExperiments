@@ -60,3 +60,5 @@ bin/*
 .metadata/*
 .sonar
 .sonar/*
+
+src/main/resources/atussum.csv
