@@ -1,11 +1,9 @@
 package stackoverflow
 
-import org.apache.spark.SparkConf
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
+import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.rdd.RDD
-import annotation.tailrec
-import scala.reflect.ClassTag
+
+import scala.annotation.tailrec
 
 /** A raw stackoverflow posting, either a question or an answer */
 case class Posting(postingType: Int, id: Int, acceptedAnswer: Option[Int], parentId: Option[QID], score: Int, tags: Option[String]) extends Serializable
@@ -100,7 +98,10 @@ class StackOverflow extends Serializable {
       highScore
     }
 
-    ???
+
+    grouped.flatMap(element => element._2)
+      .groupByKey().map(element => (element._1, answerHighScore(element._2.toArray)))
+
   }
 
 
@@ -120,7 +121,11 @@ class StackOverflow extends Serializable {
       }
     }
 
-    ???
+    scored.map(element => (firstLangInTag(element._1.tags, langs), element._2))
+      .filter(element => element._1.isDefined)
+        .map(element => (element._1.get * langSpread, element._2))
+      .cache()
+
   }
 
 
@@ -175,7 +180,11 @@ class StackOverflow extends Serializable {
 
   /** Main kmeans computation */
   @tailrec final def kmeans(means: Array[(Int, Int)], vectors: RDD[(Int, Int)], iter: Int = 1, debug: Boolean = false): Array[(Int, Int)] = {
-    val newMeans = means.clone() // you need to compute newMeans
+
+    val clustered = vectors.map(v => (findClosest(v, means), v))
+    val clusterAvg = clustered.groupByKey().mapValues(averageVectors).collect().toMap
+    val newMeans = means.indices.map(i => clusterAvg.getOrElse(i, means(i))).toArray
+
 
     // TODO: Fill in the newMeans array
     val distance = euclideanDistance(means, newMeans)
@@ -278,10 +287,20 @@ class StackOverflow extends Serializable {
     val closestGrouped = closest.groupByKey()
 
     val median = closestGrouped.mapValues { vs =>
-      val langLabel: String   = ??? // most common language in the cluster
-      val langPercent: Double = ??? // percent of the questions in the most common language
-      val clusterSize: Int    = ???
-      val medianScore: Int    = ???
+
+      val langsGroupedScores = vs.groupBy(_._1).mapValues(_.size)
+      val mostCommonLang = langsGroupedScores.maxBy(_._2)
+      val langsScores = langsGroupedScores.values.toArray.sorted
+
+      val langLabel: String = langs(mostCommonLang._1 / langSpread) // most common language in the cluster
+      val langPercent: Double = (mostCommonLang._2 / vs.size.toDouble) * 100.0 // percent of the questions in the most common language
+      val clusterSize: Int = vs.size
+
+      val allScores = vs.map(_._2).toList.sorted
+      val medianScore: Int = allScores.size % 2 match {
+        case 0 => (allScores(allScores.size / 2) + allScores(allScores.size / 2 - 1)) / 2
+        case _ => allScores(allScores.size / 2)
+      }
 
       (langLabel, langPercent, clusterSize, medianScore)
     }
